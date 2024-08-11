@@ -37,23 +37,25 @@ def check_warnings(fig_filename, image_files, file_types, directory):
     """Check for any warnings based on user selections and collected images."""
     warnings = []
 
+    # Check for missing .fig file
     if not fig_filename:
         warnings.append("No .fig file found.")
 
-    # Check for missing image file types
-    if not file_types:
-        warnings.append("No image file types selected.")
+    # Check if no images are found
+    if not image_files:
+        if not file_types:
+            warnings.append("No image file types selected.")
+        else:
+            missing_types = []
+            for ext in file_types:
+                if not any(img.lower().endswith(ext) for img in image_files):
+                    missing_types.append(ext)
+            if missing_types:
+                missing_types_str = ', '.join([f"No {ext} files found" for ext in missing_types])
+                warnings.append(missing_types_str)
     else:
-        # Collect all the images for each selected file type
-        missing_types = []
-        for ext in file_types:
-            if not any(f.lower().endswith(ext) for f in image_files):
-                missing_types.append(ext)
-
-        if missing_types:
-            # Construct a human-readable message
-            missing_types_str = ', '.join([f"No {ext} files found" for ext in missing_types])
-            warnings.append(missing_types_str)
+        if not file_types:
+            warnings.append("No image file types selected.")
 
     return warnings
 
