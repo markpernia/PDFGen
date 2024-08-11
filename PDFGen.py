@@ -47,3 +47,65 @@ def check_warnings(fig_filename, image_files, file_types, directory):
         warnings.append("No image file types selected.")
 
     return warnings
+
+
+def create_pdf(directory, fig_filename, image_files):
+    """Create a PDF from images with text annotations."""
+    images_with_text = [process_image(img_path) for img_path in image_files]
+    pdf_filename = os.path.join(directory, f"{fig_filename}.pdf")
+
+    if os.path.exists(pdf_filename):
+        os.remove(pdf_filename)
+
+    images_with_text[0].save(pdf_filename, save_all=True, append_images=images_with_text[1:], resolution=300.0,
+                             quality=95)
+    # messagebox.showinfo("Success", f"PDF generated successfully as {pdf_filename}")
+
+    # Extract just the filename from the full path
+    filename_only = os.path.basename(pdf_filename)
+
+    # Show the success message with only the filename
+    messagebox.showinfo("Success", f"PDF generated successfully as {filename_only}")
+
+
+def process_image(img_path):
+    """Process an individual image by adding text annotation below it."""
+    img = Image.open(img_path)
+
+    # Check if the image has transparency (mode 'RGBA')
+    if img.mode == 'RGBA':
+        # Create a white background image
+        background = Image.new("RGB", img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[3])  # Paste using the alpha channel as mask
+        img = background
+
+    # Proceed with the rest of the processing
+    img = img.convert('RGB')
+    font_size = min(int(img.width * 0.03), 300)
+
+    try:
+        font = ImageFont.truetype("arial.ttf", font_size)
+    except IOError:
+        font = ImageFont.load_default()
+
+    draw = ImageDraw.Draw(img)
+    text = os.path.basename(img_path)
+    text_width, text_height = get_text_size(draw, text, font)
+
+    padding = 20  # Padding between the image and the label
+    rectangle_padding = 10
+    rectangle_height = text_height + 2 * rectangle_padding  # Text height + padding above and below
+
+    new_img_height = img.height + rectangle_height + padding
+    new_img = Image.new("RGB", (img.width, new_img_height), "white")
+    new_img.paste(img, (0, 0))
+
+    draw = ImageDraw.Draw(new_img)
+    rectangle_y1 = new_img.height - rectangle_height  # Position rectangle at the very bottom
+    rectangle_y2 = new_img.height
+    draw.rectangle([0, rectangle_y1, img.width, rectangle_y2], fill="white")
+
+    text_position = ((new_img.width - text_width) / 2, rectangle_y1 + rectangle_padding)
+    draw.text(text_position, text, font=font, fill="black")
+
+    return new_img.convert('RGB')
