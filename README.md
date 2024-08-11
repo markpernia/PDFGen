@@ -8,7 +8,7 @@ PDFGen a standalone executable built with PyInstaller, offering a straightforwar
 - Page Labeling: Each page of the generated PDF includes a label at the bottom with the original image filename.
 
 ## Getting Started
-Download: Obtain the latest standalone executable from the [releases page](https://github.com/markpernia/PDFGen/releases/edit/untagged-2522159e0ebed37cacbd#).
+Download: Obtain the latest standalone executable from the [releases page](https://github.com/markpernia/PDFGen/releases).
 Installation: Simply run the downloaded executable. No additional installation or Python setup is required due to the PyInstaller packaging.
 
 ## Usage:
