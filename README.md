@@ -1,6 +1,6 @@
 # PDFGen
 
-**PDFGen** is a simple Python application designed for Windows that generates a PDF file from images in a specified directory. The images can be in `.jpg`, `.jpeg`, or `.png` formats, and the generated PDF file will be named based on a `.fig` file located in the same directory. 
+**PDFGen** is a simple Python application designed for Mac and Windows that generates a PDF file from images in a specified directory. The images can be in `.jpg`, `.jpeg`, or `.png` formats, and the generated PDF file will be named based on a `.fig` file located in the same directory. 
 
 PDFGen v0.1 includes basic functionality for image processing and PDF generation.
 
