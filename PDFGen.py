@@ -30,3 +30,20 @@ def generate_pdf(directory, include_subdirs, include_jpg, include_png):
         create_pdf(directory, fig_filename, image_files)
     else:
         messagebox.showwarning("Warning", "No .fig file found or no images found.")
+
+
+def check_warnings(fig_filename, image_files, file_types, directory):
+    """Check for any warnings based on user selections and collected images."""
+    warnings = []
+    if not fig_filename:
+        warnings.append("No .fig file found.")
+
+    if not image_files:
+        missing_types = [ext for ext in file_types if
+                         not any(f.endswith(ext) for f in collect_images(directory, True, [ext]))]
+        for ext in missing_types:
+            warnings.append(f"No {ext} files found.")
+    elif not file_types:
+        warnings.append("No image file types selected.")
+
+    return warnings
