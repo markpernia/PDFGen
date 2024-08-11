@@ -178,7 +178,7 @@ app_window = Tk()
 app_window.title("PDFGen")
 
 # Set the window icon
-icon_path = 'icon.ico'
+icon_path = 'PDFGen.ico.ico'
 if os.path.isfile(icon_path):
     app_window.iconbitmap(icon_path)
 
