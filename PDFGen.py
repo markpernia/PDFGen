@@ -175,7 +175,7 @@ def setup_ui():
 
 # Create the main window
 app_window = Tk()
-app_window.title("PDF Generator v0.1")
+app_window.title("PDFGen")
 
 # Set the window icon
 icon_path = 'icon.ico'
