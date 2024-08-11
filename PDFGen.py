@@ -109,3 +109,91 @@ def process_image(img_path):
     draw.text(text_position, text, font=font, fill="black")
 
     return new_img.convert('RGB')
+
+
+def get_text_size(draw, text, font):
+    """Get the size of the text for positioning."""
+    if hasattr(draw, 'textbbox'):
+        bbox = draw.textbbox((0, 0), text, font=font)
+        return bbox[2] - bbox[0], bbox[3] - bbox[1]
+    return draw.textsize(text, font=font)
+
+
+def browse_directory():
+    """Open a file dialog to select a directory."""
+    directory = filedialog.askdirectory()
+    if directory:
+        entry_directory.delete(0, 'end')
+        entry_directory.insert(0, directory)
+
+
+def start_processing():
+    """Start the PDF generation process based on user input."""
+    directory = entry_directory.get().strip()
+    if not os.path.isdir(directory):
+        messagebox.showerror("Error", "The specified directory does not exist. Please check the path and try again.")
+        return
+
+    include_subdirs = include_subdirs_var.get() == 1
+    include_jpg = include_jpg_var.get() == 1
+    include_png = include_png_var.get() == 1
+
+    if not (include_jpg or include_png):
+        messagebox.showwarning("Warning", "No image file type selected. Please select at least one image file type.")
+        return
+
+    generate_pdf(directory, include_subdirs, include_jpg, include_png)
+
+
+def setup_ui():
+    """Set up the main window UI."""
+    Label(app_window, text="Directory:").grid(row=0, column=0, padx=10, pady=5, sticky='w')
+    entry_directory.grid(row=0, column=1, padx=10, pady=5, sticky='ew')
+    Button(app_window, text="Browse", command=browse_directory).grid(row=0, column=2, padx=10, pady=5)
+
+    Checkbutton(app_window, text="Include images from subdirectories", variable=include_subdirs_var).grid(row=1,
+                                                                                                          column=0,
+                                                                                                          columnspan=3,
+                                                                                                          padx=10,
+                                                                                                          pady=5,
+                                                                                                          sticky='w')
+
+    Checkbutton(app_window, text="jpg/jpeg", variable=include_jpg_var).grid(row=2, column=0, padx=10, pady=5,
+                                                                                    sticky='w')
+
+    Checkbutton(app_window, text="png", variable=include_png_var).grid(row=2, column=1, padx=10, pady=5,
+                                                                              sticky='w')
+
+    Button(app_window, text="Generate PDF", command=start_processing).grid(row=3, column=0, columnspan=3, padx=10,
+                                                                           pady=20)
+
+
+# Create the main window
+app_window = Tk()
+app_window.title("PDF Generator v0.1")
+
+# Set the window icon
+icon_path = 'icon.ico'
+if os.path.isfile(icon_path):
+    app_window.iconbitmap(icon_path)
+
+# Layout configuration
+app_window.grid_rowconfigure(0, weight=1)
+app_window.grid_rowconfigure(1, weight=1)
+app_window.grid_rowconfigure(2, weight=1)
+app_window.grid_rowconfigure(3, weight=1)
+app_window.grid_columnconfigure(1, weight=1)
+
+# Directory input
+entry_directory = Entry(app_window, width=50)
+
+# Variables for checkboxes
+include_subdirs_var = IntVar()
+include_jpg_var = IntVar()
+include_png_var = IntVar()
+
+# Set up the UI elements
+setup_ui()
+
+# Run the application
+app_window.mainloop()
