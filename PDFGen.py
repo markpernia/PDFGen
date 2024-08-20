@@ -1,5 +1,6 @@
 import os
-from tkinter import Tk, Label, Button, Entry, Checkbutton, IntVar, filedialog, messagebox
+from tkinter import Tk, Label, Button, Entry, Checkbutton, IntVar, filedialog, messagebox, simpledialog
+from tkinter import ttk  # For the progress bar
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -18,26 +19,59 @@ def collect_images(directory, include_subdirs, file_types):
 
 def generate_pdf(directory, include_subdirs, include_jpg, include_png):
     """Generate a PDF from selected images in the directory."""
-    fig_filename = next((os.path.splitext(f)[0] for f in os.listdir(directory) if f.endswith('.fig')), None)
+    fig_files = [f for f in os.listdir(directory) if f.endswith('.fig')]
+
+    if len(fig_files) == 0:
+        messagebox.showwarning("Warning", "No .fig file found in the directory.")
+        return  # Exit the function since no .fig file is available
+
+    elif len(fig_files) == 1:
+        fig_filename = os.path.splitext(fig_files[0])[0]
+
+    else:
+        fig_filename = simpledialog.askstring(
+            "Input",
+            f"Multiple .fig files found:\n\n{', '.join(fig_files)}\n\nPlease enter a custom name for the PDF file:"
+        )
+        if not fig_filename:
+            return  # User cancelled the operation
+
     file_types = (['.jpg', '.jpeg'] if include_jpg else []) + (['.png'] if include_png else [])
     image_files = collect_images(directory, include_subdirs, file_types)
 
-    warnings = check_warnings(fig_filename, image_files, file_types, directory)
+    warnings = check_warnings(fig_filename, image_files, file_types)
     if warnings:
         messagebox.showwarning("Warning", "\n".join(warnings))
         return
 
-    if fig_filename and image_files:
+    if image_files:
         create_pdf(directory, fig_filename, image_files)
     else:
-        messagebox.showwarning("Warning", "No .fig file found or no images found.")
+        messagebox.showwarning("Warning", "No images found.")
 
 
-def check_warnings(fig_filename, image_files, file_types, directory):
+def select_fig_file(fig_files):
+    """Prompt the user to select or enter the desired .fig file."""
+    fig_filename = simpledialog.askstring(
+        "Select FIG File",
+        f"Multiple .fig files found:\n\n{', '.join(fig_files)}\n\nPlease enter the desired .fig file name (without extension):"
+    )
+    if fig_filename:
+        # Check if the entered filename matches any of the available .fig files
+        if any(fig_filename == os.path.splitext(f)[0] for f in fig_files):
+            return fig_filename
+        else:
+            messagebox.showerror("Error", "Invalid file name entered. Please try again.")
+            return select_fig_file(fig_files)  # Retry if the user entered an invalid name
+    else:
+        return None  # User cancelled the operation
+
+
+def check_warnings(fig_filename, image_files, file_types):
     """Check for any warnings based on user selections and collected images."""
     warnings = []
 
-    # Check for missing .fig file
+    # Check for missing .fig file (shouldn't happen after user selection)
     if not fig_filename:
         warnings.append("No .fig file found.")
 
@@ -62,7 +96,19 @@ def check_warnings(fig_filename, image_files, file_types, directory):
 
 def create_pdf(directory, fig_filename, image_files):
     """Create a PDF from images with text annotations."""
-    images_with_text = [process_image(img_path) for img_path in image_files]
+    total_images = len(image_files)
+    progress_bar["maximum"] = total_images
+
+    images_with_text = []
+    for idx, img_path in enumerate(image_files):
+        images_with_text.append(process_image(img_path))
+        progress_bar["value"] = idx + 1
+
+        # Update percentage
+        percentage = int((idx + 1) / total_images * 100)
+        percentage_label.config(text=f"{percentage}%")
+        progress_bar.update()
+
     pdf_filename = os.path.join(directory, f"{fig_filename}.pdf")
 
     if os.path.exists(pdf_filename):
@@ -73,6 +119,8 @@ def create_pdf(directory, fig_filename, image_files):
 
     filename_only = os.path.basename(pdf_filename)
     messagebox.showinfo("Success", f"PDF generated successfully as {filename_only}")
+    progress_bar["value"] = 0  # Reset progress bar after completion
+    percentage_label.config(text="0%")  # Reset percentage label
 
 
 def process_image(img_path):
@@ -169,13 +217,18 @@ def setup_ui():
     Checkbutton(app_window, text="png", variable=include_png_var).grid(row=2, column=1, padx=10, pady=5,
                                                                        sticky='w')
 
-    Button(app_window, text="Generate PDF", command=start_processing).grid(row=3, column=0, columnspan=3, padx=10,
-                                                                           pady=20)
+    Button(app_window, text="Create PDF", command=start_processing).grid(row=3, column=0, columnspan=3, padx=10,
+                                                                         pady=20)
+
+    progress_bar.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky='ew')
+
+    # Add a Label to display the percentage
+    percentage_label.grid(row=4, column=2, padx=10, pady=10, sticky='e')
 
 
 # Create the main window
 app_window = Tk()
-app_window.title("PDFGen")
+app_window.title("ImgToPDF")
 
 # Set the window icon
 icon_path = 'PDFGen.ico'
@@ -197,8 +250,14 @@ include_subdirs_var = IntVar()
 include_jpg_var = IntVar()
 include_png_var = IntVar()
 
+# Progress bar widget
+progress_bar = ttk.Progressbar(app_window, orient="horizontal", mode="determinate")
+
+# Label to display the percentage
+percentage_label = Label(app_window, text="0%")
+
 # Set up the UI elements
 setup_ui()
 
 # Run the application
-app_window.mainloop()
+app_window.mainloop()  # Start the Tkinter event loop
